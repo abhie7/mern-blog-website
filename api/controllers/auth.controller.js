@@ -1,6 +1,9 @@
 import User from "../models/user.model.js"
 import bcryptjs from "bcryptjs" // hash passwords
-export const signup = async (req, res) => {
+import { errorHandler } from "../utils/error.js"
+
+// signup controller
+export const signup = async (req, res, next) => {
     // console.log(req.body) // api testing
     const { username, email, password } = req.body
 
@@ -12,7 +15,8 @@ export const signup = async (req, res) => {
         email === "" ||
         password === ""
     ) {
-        return res.status(400).json({ message: "All fields are required" })
+        // return res.status(400).json({ message: "All fields are required" })
+        next(errorHandler(400, "All fields are required"))
     }
 
     const hashedPassword = bcryptjs.hashSync(password, 10)
@@ -22,14 +26,14 @@ export const signup = async (req, res) => {
         username,
         email,
         password: hashedPassword,
-    })  
+    })
 
     try {
         // save new user to database
         await newUser.save()
         res.json("Signup successful")
-    } catch (error) {
         // check for duplicate users
-        res.status(500).json({ message: error.message })
+    } catch (error) {
+        next(error)
     }
 }
